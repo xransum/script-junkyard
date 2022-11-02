@@ -26,33 +26,31 @@
  * @param callback {function} - optional callback function to be executed when resolved.
  * @returns {Promise} - a promise that resolves when the window is root.
  **/
-(function() {
-    function strictWindow(callback) {
-        return new Promise((resolve, reject) => {
-            if (window.top === window.self) {
-                /** The frames object does not play nice with unsafeWindow.
-                 *
-                 * These next three work in Firefox, but not Tampermonkey, nor pure Chrome.
-                 * console.log ("Ex: 1", frames[1].variableOfInterest);                // undefined
-                 * console.log ("Ex: 2", unsafeWindow.frames[1].variableOfInterest);   // undefined
-                 * console.log ("Ex: 3", frames[1].unsafeWindow);                      // undefined
-                 *
-                 * This will throw a silent crash to all browsers.
-                 * console.log ("Ex: 4", unsafeWindow.frames[1].unsafeWindow.variableOfInterest);
-                 **/
-                
-                // Aside from the above, we can resolve the Promise and continue.
-                console.debug("Userscript detected to be running in main window.");
-                resolve();
-                
-                if (typeof(callback) === 'function') {
-                    callback();
-                }
-            } else {
-                console.debug("Detected Userscript trying to be run within an iframe.");
-                reject("Rejecting iframe execution. Frame ID: " + window.self.frameElement.id);
+function strictWindow(callback) {
+    return new Promise((resolve, reject) => {
+        if (window.top === window.self) {
+            /** The frames object does not play nice with unsafeWindow.
+             *
+             * These next three work in Firefox, but not Tampermonkey, nor pure Chrome.
+             * console.log ("Ex: 1", frames[1].variableOfInterest);                // undefined
+             * console.log ("Ex: 2", unsafeWindow.frames[1].variableOfInterest);   // undefined
+             * console.log ("Ex: 3", frames[1].unsafeWindow);                      // undefined
+             *
+             * This will throw a silent crash to all browsers.
+             * console.log ("Ex: 4", unsafeWindow.frames[1].unsafeWindow.variableOfInterest);
+             **/
+            
+            // Aside from the above, we can resolve the Promise and continue.
+            console.debug("Userscript detected to be running in main window.");
+            resolve();
+            
+            if (typeof(callback) === 'function') {
+                callback();
             }
-            return;
-        });
-    }
-})();
+        } else {
+            console.debug("Detected Userscript trying to be run within an iframe.");
+            reject("Rejecting iframe execution. Frame ID: " + window.self.frameElement.id);
+        }
+        return;
+    });
+}
