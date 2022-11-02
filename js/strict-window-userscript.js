@@ -3,19 +3,19 @@
  * injected within an iframe.
  * 
  * Examples -
- * Example 1
+ * Example 1:
  *    strictWindow(function() {
  *        'use strict';
  *        // code here
  *    });
  *  
- * Example 2
+ * Example 2:
  *     (async function() {
  *          await strictWindow();
  *          // Your code here
  *     })();
  *  
- * Example 3
+ * Example 3:
  *     (function(factory) {
  *         strictWindow(factory);
  *     })(function() {
@@ -48,8 +48,9 @@ function strictWindow(callback) {
                 callback();
             }
         } else {
-            console.debug("Detected Userscript trying to be run within an iframe.");
-            reject("Rejecting iframe execution. Frame ID: " + window.self.frameElement.id);
+            console.debug("Detected Userscript trying to be run within an iframe.", "Frame ID: " + window.self.frameElement.id);
+          	// Don't need to reject since the intent is to be strict, no need to require catch exceptions.
+            // reject();
         }
         return;
     });
