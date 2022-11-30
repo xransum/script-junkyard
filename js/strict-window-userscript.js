@@ -28,8 +28,7 @@
  **/
 function strictWindow(callback) {
     return new Promise((resolve, reject) => {
-        const factoryWindow = window.self;
-        if (window.top === factoryWindow) {
+        if (window.top === window.self) {
             /** The frames object does not play nice with unsafeWindow.
              *
              * These next three work in Firefox, but not Tampermonkey, nor pure Chrome.
@@ -43,13 +42,13 @@ function strictWindow(callback) {
             
             // Aside from the above, we can resolve the Promise and continue.
             console.debug("Userscript detected to be running in main window.");
-            resolve(factoryWindow);
+            resolve(window);
             
             if (typeof(callback) === 'function') {
-                callback(factoryWindow);
+                callback(window);
             }
         } else {
-            console.debug("Detected Userscript trying to be run within an iframe.", "Frame ID: " + factoryWindow.frameElement.id);
+            console.debug("Detected Userscript trying to be run within an iframe.", "Frame ID: " + window.self.frameElement.id);
           	// Don't need to reject since the intent is to be strict, no need to require catch exceptions.
             // reject();
         }
