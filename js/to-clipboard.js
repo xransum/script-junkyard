@@ -1,20 +1,20 @@
-function toClipboard(text) {
-    const onSuccess = function() {
-        if (typeof debugging !== 'undefined' && debugging === true) {
-            console.debug("Successfully copied text to clipboard!");
-        }
-        return true;
+function toClipboard(value) {
+    let text = value;
+    const onCopySuccess = function() {
+        console.debug('Successfully copied to clipboard.');
+        return;
     };
-    const onError = function(err) {
-        if (typeof debugging !== 'undefined' && debugging === true) {
-            console.debug("Failed to copy text to clipboard...");
-            console.error(err);
-        }
+    const onCopyError = function(e) {
+        console.error(e);
+        return;
     };
     
-    var status = false;
+    if (typeof value !== 'string') {
+        text = JSON.stringify(text);
+    }
+    
     if (!navigator.clipboard) {
-        var textArea = document.createElement("textarea");
+        let textArea = document.createElement("textarea");
         textArea.value = text;
         
         // Avoid scrolling to bottom
@@ -27,18 +27,15 @@ function toClipboard(text) {
         textArea.select();
         
         try {
-            if (document.execCommand('copy')) {
-                status = onSuccess();
-            }
+            onCopySuccess(document.execCommand('copy'));
         } catch (e) {
-            onError(e);
+            onCopyError(e);
         }
         
         document.body.removeChild(textArea);
     }
     
-    if (!status) {
-        navigator.clipboard.writeText(text).then(onSuccess, onError);
-    }
+    navigator.clipboard.writeText(text).then(onCopySuccess, onCopyError);
+    
     return;
 }
