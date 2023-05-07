@@ -1,7 +1,7 @@
 // Function for deconstructing a URL to its components, necessary for getting 
 // client identifier, urls hostname[:port], and the absolute URL.
 // Example: 
-//     urlparser.getUrlProperties('example.com/search?q=abc&encoding=utf-8')
+//     getUrlProperties('example.com/search?q=abc&encoding=utf-8')
 function getUrlProperties(url) {
     // Use the DOM to avoid having to use regex.
     let a = document.createElement("a");
@@ -38,12 +38,8 @@ function getUrlProperties(url) {
 
 // Given a url and query parameter, return the url with all occurrences of the query 
 // parameter removed, if it is present. Otherwise return the unaltered url.
-function removeQueryParam(url, paramName) {
-    var props = getUrlProperties(url);
-    if (!props.query) {
-        return url;
-    }
-    var parts = props.query.split("&");
+function removeQueryParam(urlProps, paramName) {
+    var parts = urlProps.query.split("&");
     if (parts[0].charAt(0) == "?") {
         parts[0] = parts[0].substring(1);
     }
@@ -62,7 +58,8 @@ function removeQueryParam(url, paramName) {
         remainingParts.push(p);
     }
     var newQuery = "?" + remainingParts.join("&");
-    return overwriteQueryStr(props, newQuery);
+    var updatedQueryStr = overwriteQueryStr(urlProps, newQuery);
+    return updatedQueryStr;
 }
 
 // Get the URL with the new query string.
@@ -91,4 +88,36 @@ function appendQueryString(urlProps, queryParameter, queryValue) {
     );
     var newQuery = overwriteQueryStr(urlProps, queryStr);
     return newQuery;
+}
+
+// Parse URL query string and return it as an object
+// Example:
+//     getQueryParams(getUrlProperties('example.com/search?q=abc&encoding=utf-8'))
+function getQueryParams(urlProps) {
+    if (Object.prototype.toString.call(urlProps) === "[object String]") {
+        urlProps = getUrlProperties(urlProps);
+    }
+    
+    let queryObj = {};
+    if (urlProps.query) {
+        var parts = urlProps.query.split("&");
+        if (parts[0].charAt(0) == "?") {
+            parts[0] = parts[0].substring(1);
+        }
+        
+        var remainingParts = new Array();
+        for (var i = 0; i < parts.length; i++) {
+            var p = parts[i];
+            if (!p) {
+                // Handling extraneous leading/trailing '&'s, or 
+                // double ampersands
+                continue;
+            }
+            
+            var keyVal = p.split("=");
+            queryObj[keyVal[0]] = keyVal[1];
+        }
+    }
+    
+    return queryObj;
 }
