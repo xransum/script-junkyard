@@ -1,3 +1,11 @@
+/**
+ * Delay function call until after a certain amount of 
+ * time has passed since the last time it was called.
+ * 
+ * @param {function} callback
+ * @param {number} ms
+ * @return {function}
+ */
 function delay(callback, ms) {
     var timer = 0;
     return function() {
