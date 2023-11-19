@@ -84,9 +84,9 @@ exitcode=0
 
 delimiter 50 "-"
 for arg in "${args[@]}"; do
-        value="$(fang "$arg")"
+        arg="$(fang "$arg")"
 
-        echo "> ${value}"
+        echo "> ${arg}"
         #response=$(curl --insecure \
         #    --silent \
         #    --fail \
@@ -99,8 +99,8 @@ for arg in "${args[@]}"; do
         #    --user-agent "$USER_AGENT"  \
         #    --dump-header - \
         #    -o /dev/null \
-        #    "$value")
-        response="$(curl -kIL --no-progress-meter --connect-timeout 30 --no-keepalive --show-error --fail --silent "$value" 2>&1)"
+        #    "$arg")
+        response="$(curl -kIL --no-progress-meter --connect-timeout 30 --no-keepalive --show-error --fail --silent "$arg" 2>&1)"
         #response="$($cmd)"
         if [ "$?" -ne 0 ]; then
                 exitcode=1
