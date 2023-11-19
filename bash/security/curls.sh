@@ -90,7 +90,6 @@ exitcode=0
 
 delimiter 50 "-"
 for arg in "${args[@]}"; do
-    index=$((index + 1))
     url="$(fang "$arg")"
 
     echo "> ${url}"
@@ -131,6 +130,8 @@ for arg in "${args[@]}"; do
     if [ "$index" -eq "$final_index" ]; then
         echo ""
     fi
+
+    index=$((index + 1))
 done
 delimiter 50 "-"
 
