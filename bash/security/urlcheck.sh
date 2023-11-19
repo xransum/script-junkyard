@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function help {
-        echo "Usage: curls [URL]..."
+        echo "Usage: urlcheck [URL]..."
         echo ""
         echo "check a urls aliveness."
         echo ""
