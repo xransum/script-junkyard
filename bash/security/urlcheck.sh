@@ -116,17 +116,20 @@ for arg in "${args[@]}"; do
 
         # print error
         reason="$(grep -oP 'curl:.*$' <<<"$response")"
-        if [[ "$reason" == *"Could not resolve host"* ]]; then
-                echo "Could not resolve host."
-        elif [[ "$reason" == *"Connection timed out"* ]]; then
-                echo "Connection timed out."
-        elif [[ "$reason" == *"Failed to connect to"* ]]; then
-                grep -oP 'Failed to connect to.*$' <<<"$reason" |
-                        sed 's/to .\+\? port/to connect to port/g' |
-                        sed 's/ after.*/./g'
-        else
-                echo "Unknown error."
-                echo "$reason"
+
+        if [ -n "$reason" ]; then
+                if [[ "$reason" == *"Could not resolve host"* ]]; then
+                        echo "Could not resolve host."
+                elif [[ "$reason" == *"Connection timed out"* ]]; then
+                        echo "Connection timed out."
+                elif [[ "$reason" == *"Failed to connect to"* ]]; then
+                        grep -oP 'Failed to connect to.*$' <<<"$reason" |
+                                sed 's/to .\+\? port/to connect to port/g' |
+                                sed 's/ after.*/./g'
+                elif [[ "$reason" != *"requested URL returned error"* ]]; then
+                        echo "Unknown error."
+                        echo "$reason"
+                fi
         fi
 
         if [ "$index" -ne "$final_index" ]; then
