@@ -69,21 +69,20 @@ function delimiter() {
     fi
 }
 
-function remove_dupe_urls() {
-    # remove duplicate urls
-    urls=()
-    for url in "$@"; do
-        if [[ ! " ${urls[@]} " =~ " ${url} " ]]; then
-            urls+=("$url")
+function remove_dupes() {
+    values=()
+    for value in "$@"; do
+        if [[ ! " ${values[@]} " =~ " ${value} " ]]; then
+            values+=("$value")
         fi
     done
-    echo "${urls[@]}"
+    echo "${values[@]}"
 }
 
 HEADER_MATCH_STRING='^HTTP|(Location|x-amz-apigw-id|CloudFront|x-amz-cf-id|AmazonS3).*:|Could not resolve host|Content-(Length|Type)'
 
 args=("$@")
-urls=($(remove_dupe_urls "${args[@]}"))
+urls=($(remove_dupes "${args[@]}"))
 index=0
 length=${#urls[@]}
 final_index=$((length - 1))
