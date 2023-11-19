@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function help {
-    echo "Usage: digs [DOMAIN|IP]..."
+    echo "Usage: dnscheck [DOMAIN|IP]..."
     echo ""
     echo "domain name system lookup, equivalent to 'host DOMAIN'"
     echo ""
@@ -90,21 +90,21 @@ final_index=$((length - 1))
 exitcode=0
 
 for arg in "${args[@]}"; do
-    value="$(fang "$arg")"
-    value="$(extract_domain "$value")"
+    arg="$(fang "$arg")"
+    arg="$(extract_domain "$arg")"
 
-    echo "> $value"
+    echo "> $arg"
 
-    #output="$(dig +short $value | sort -n)"
-    #output="$(host "$value" 2>&1)"
+    #output="$(dig +short $arg | sort -n)"
+    #output="$(host "$arg" 2>&1)"
     output=""
     # record types that will give us an ip addr or a ptr record
     record_types=("A" "AAAA" "PTR")
     for record_type in "${record_types[@]}"; do
         if [[ "$record_type" == "PTR" ]]; then
-            result="$(dig -x "$value" +short)"
+            result="$(dig -x "$arg" +short)"
         else
-            result="$(dig "$value" "$record_type" +short)"
+            result="$(dig "$arg" "$record_type" +short)"
         fi
 
         # capture return code
