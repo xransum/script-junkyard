@@ -82,14 +82,14 @@ function remove_dupes() {
 HEADER_MATCH_STRING='^HTTP|(Location|x-amz-apigw-id|CloudFront|x-amz-cf-id|AmazonS3).*:|Could not resolve host|Content-(Length|Type)'
 
 args=("$@")
-urls=($(remove_dupes "${args[@]}"))
+args=($(remove_dupes "${args[@]}"))
 index=0
-length=${#urls[@]}
+length=${#args[@]}
 final_index=$((length - 1))
 exitcode=0
 
 delimiter 50 "-"
-for arg in "${urls[@]}"; do
+for arg in "${args[@]}"; do
     index=$((index + 1))
     url="$(fang "$arg")"
 
