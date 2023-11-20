@@ -114,13 +114,13 @@ for arg in "${args[@]}"; do
         
         if [[ "$result" ]]; then
             # append the record type to each line of output
-            result="$(sed "s/$/ [$record_type]/g" <<<"$result")"
-            output="$output$result"
+            # result="$(sed "s/$/ [$record_type]/g" <<<"$result")"
+            output="$output\n$result"
         fi
     done
 
     if [[ "$output" ]]; then
-        echo "$output"
+        echo -e "$output" | sort -nr | sed '/^$/d' | uniq
     else
         echo "No DNS results found."
     fi
