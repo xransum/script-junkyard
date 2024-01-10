@@ -1,19 +1,22 @@
-/**
- * A function that will iterate over an array and yield the value of each item in the array.
+/** Wait for an element to exist.
  * 
- * @param {Array} arr The array to iterate over.
+ * This function will wait for an element to exist before resolving
+ * the promise. This is useful for pages that load content via AJAX
+ * and/or heavily dynamically intense content.
  * 
- * @returns {Promise} A promise that will resolve with the value of the current item in the array.
+ * @author xransum <https://github.com/xransum>
+ * @see https://github.com/xransum/script-junkyard/blob/main/js/until-exists.js
+ * 
+ * @param {string} selector The selector to wait for.
+ * @param {HTMLElement} target The target element to observe.
+ * @returns {Promise} A promise that will resolve with the element.
+ * @promise {HTMLElement} The element that was found as a jQuery object.
  * 
  * @example
- * 
- * var someItems = [1, 2, 3];
- * for await (let item of iter(someItems)) {
- *   console.log(item);
- * }
- */
-function untilExists(selector, target) {
-    target = target ?? document;
+ * var el = await untilExists('#someElement');
+ * console.log(el);
+ **/
+function untilExists(selector, target = document) {
     return new Promise((resolve, reject) => {
         try {
             let el = $(selector);
