@@ -2,7 +2,6 @@
  * A function that will iterate over an array and yield the value of each item in the array.
  *  
  * @param {Array} arr The array to iterate over.
- *  
  * @returns {Promise} A promise that will resolve with the value of the current item in the array.
  *  
  * @example
