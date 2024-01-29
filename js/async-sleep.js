@@ -11,7 +11,7 @@
  * await sleep(2000);
  *
  */
-function* sleep(ms) {
+function sleep(ms) {
     // Returns a promise to allow for better async stack support in
     // case of errors.
     return new Promise((resolve) => {
