@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+# gits - resolve a repo path under $GITS_ROOT and print it on stdout.
+#
+# This script is the path-resolver half of the `gits` navigator. It cannot
+# change the parent shell's working directory by itself (Unix process
+# isolation), so it must be invoked through a tiny shell wrapper function
+# that captures stdout and runs `cd` on it. See the project README:
+#   https://github.com/xransum/script-junkyard/tree/main/gits
+#
+# Exit-code contract (consumed by the wrapper):
+#   0 + non-empty stdout : navigation mode -- caller should cd to stdout
+#   0 + empty stdout     : cancelled (picker dismissed, etc.) -- do nothing
+#   2 + stdout text      : informational mode (help, list) -- print as-is
+#   1                    : error -- message already written to stderr
+
+set -u
+
+GITS_ROOT="${GITS_ROOT:-$HOME/Documents/Gits}"
+GITS_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/gits"
+GITS_LAST_FILE="$GITS_STATE_DIR/last"
+
+die() {
+    printf "gits: %s\n" "$*" >&2
+    exit 1
+}
+
+usage() {
+    cat <<EOF
+gits - jump into a repo under \$GITS_ROOT (default: ~/Documents/Gits)
+
+Usage:
+  gits                cd to the Gits root
+  gits <pattern>      cd to a repo matching pattern (case-insensitive substring)
+                      single match: cd immediately
+                      multiple:     fzf if installed, otherwise numbered menu
+  gits -              cd back to the previous repo (toggles)
+  gits -l, ls         list all repos
+  gits -h, --help     show this help
+
+Environment:
+  GITS_ROOT           override the repo root (default: ~/Documents/Gits)
+EOF
+}
+
+list_repos() {
+    local d
+    for d in "$GITS_ROOT"/*/; do
+        [ -d "$d" ] || continue
+        printf "%s\n" "$(basename "$d")"
+    done
+}
+
+# Remember the caller's current PWD as "previous" -- but only if it lives
+# inside the gits root. Stored as the top-level repo dir (not nested subdirs).
+remember_pwd() {
+    local abs_pwd abs_root rel top
+    abs_pwd=$(cd "$PWD" 2>/dev/null && pwd -P) || return 0
+    abs_root=$(cd "$GITS_ROOT" 2>/dev/null && pwd -P) || return 0
+    case "$abs_pwd/" in
+        "$abs_root"/*)
+            rel="${abs_pwd#"$abs_root"/}"
+            top="${rel%%/*}"
+            mkdir -p "$GITS_STATE_DIR"
+            printf "%s/%s\n" "$abs_root" "$top" > "$GITS_LAST_FILE"
+            ;;
+    esac
+}
+
+# Print one match per line. Case-insensitive substring against basename.
+find_matches() {
+    local query="$1"
+    local lc d name name_lc
+    lc=$(printf "%s" "$query" | tr '[:upper:]' '[:lower:]')
+    for d in "$GITS_ROOT"/*/; do
+        [ -d "$d" ] || continue
+        name=$(basename "$d")
+        name_lc=$(printf "%s" "$name" | tr '[:upper:]' '[:lower:]')
+        case "$name_lc" in
+            *"$lc"*) printf "%s\n" "$name" ;;
+        esac
+    done
+}
+
+# Open /dev/tty as fd 3 for interactive prompts so we still work when the
+# wrapper captures stdout. Fall back to inherited stdin if no tty (cron, CI).
+if { exec 3</dev/tty; } 2>/dev/null; then
+    :
+else
+    exec 3<&0
+fi
+
+[ -d "$GITS_ROOT" ] || die "root directory not found: $GITS_ROOT"
+
+arg="${1-}"
+
+case "$arg" in
+    "")
+        remember_pwd
+        printf "%s\n" "$GITS_ROOT"
+        exit 0
+        ;;
+    -h|--help)
+        usage
+        exit 2
+        ;;
+    -l|ls|--list)
+        list_repos
+        exit 2
+        ;;
+    -)
+        [ -r "$GITS_LAST_FILE" ] || die "no previous repo recorded"
+        prev=$(cat "$GITS_LAST_FILE")
+        [ -n "$prev" ] || die "no previous repo recorded"
+        [ -d "$prev" ] || die "previous repo no longer exists: $prev"
+        remember_pwd
+        printf "%s\n" "$prev"
+        exit 0
+        ;;
+esac
+
+# Exact match wins (also handles nested paths like 'valkyrie-tools/src')
+if [ -d "$GITS_ROOT/$arg" ]; then
+    remember_pwd
+    printf "%s\n" "$GITS_ROOT/$arg"
+    exit 0
+fi
+
+matches=$(find_matches "$arg")
+if [ -z "$matches" ]; then
+    die "no match for '$arg'"
+fi
+
+count=$(printf "%s\n" "$matches" | wc -l | tr -d ' ')
+
+if [ "$count" -eq 1 ]; then
+    remember_pwd
+    printf "%s/%s\n" "$GITS_ROOT" "$matches"
+    exit 0
+fi
+
+# Multiple matches: interact with the user via fd 3 (tty or fallback stdin).
+pick=""
+if command -v fzf >/dev/null 2>&1; then
+    pick=$(printf "%s\n" "$matches" | fzf \
+        --prompt='gits> ' \
+        --query="$arg" \
+        --select-1 \
+        --exit-0 \
+        --height=40% \
+        --reverse <&3) || exit 0
+else
+    {
+        printf "Matches for '%s':\n" "$arg"
+        i=1
+        while IFS= read -r m; do
+            printf "  %2d) %s\n" "$i" "$m"
+            i=$((i + 1))
+        done <<< "$matches"
+        printf "Select [1-%d] (q to cancel): " "$count"
+    } >&2
+
+    if ! IFS= read -r choice <&3; then
+        printf "\n" >&2
+        exit 0
+    fi
+
+    case "$choice" in
+        ""|q|Q)
+            exit 0
+            ;;
+        *[!0-9]*)
+            die "invalid selection: $choice"
+            ;;
+    esac
+    if [ "$choice" -lt 1 ] || [ "$choice" -gt "$count" ]; then
+        die "invalid selection: $choice"
+    fi
+    pick=$(printf "%s\n" "$matches" | sed -n "${choice}p")
+fi
+
+[ -n "$pick" ] || exit 0
+
+remember_pwd
+printf "%s/%s\n" "$GITS_ROOT" "$pick"
+exit 0

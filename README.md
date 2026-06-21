@@ -6,6 +6,7 @@ This is really just becuase I dislike the fact Gist emplores two hashes to their
 
 ## Contents
 
+- [gits](/gits) -- fuzzy `cd` for your repo directory (multi-file tool with installer)
 - [js](/js)
 - [python](/python)
   - [commons.py](/python/commons.py): Simple and common shorthand functions.
